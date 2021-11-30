@@ -18,6 +18,18 @@
 
 FMT_BEGIN_NAMESPACE
 
+// Enable safe chrono durations, unless explicitly disabled.
+#ifndef FMT_SAFE_DURATION_CAST
+#  define FMT_SAFE_DURATION_CAST 1
+#endif
+#if FMT_SAFE_DURATION_CAST
+
+// For conversion between std::chrono::durations without undefined
+// behaviour or erroneous results.
+// This is a stripped down version of duration_cast, for inclusion in fmt.
+// See https://github.com/pauldreik/safe_duration_cast
+//
+// Copyright Paul Dreik 2019
 namespace safe_duration_cast {
 
 template <typename To, typename From,
@@ -161,7 +173,8 @@ To safe_duration_cast(std::chrono::duration<FromRep, FromPeriod> from,
   ec = 0;
   // the basic idea is that we need to convert from count() in the from type
   // to count() in the To type, by multiplying it with this:
-  using Factor = std::ratio_divide<typename From::period, typename To::period>;
+  struct Factor
+    : std::ratio_divide<typename From::period, typename To::period> {};
 
   static_assert(Factor::num > 0, "num must be positive");
   static_assert(Factor::den > 0, "den must be positive");
@@ -234,7 +247,8 @@ To safe_duration_cast(std::chrono::duration<FromRep, FromPeriod> from,
 
   // the basic idea is that we need to convert from count() in the from type
   // to count() in the To type, by multiplying it with this:
-  using Factor = std::ratio_divide<typename From::period, typename To::period>;
+  struct Factor
+      : std::ratio_divide<typename From::period, typename To::period> {};
 
   static_assert(Factor::num > 0, "num must be positive");
   static_assert(Factor::den > 0, "den must be positive");
